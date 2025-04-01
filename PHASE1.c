@@ -95,7 +95,6 @@ void print_treasure(TREASURE *fortune, int index)
     printf("Hint: %s\n", fortune->hint);
 }
 
-
 void list(char hunt[30])
 {
   DIR *folder;
@@ -138,6 +137,8 @@ void list(char hunt[30])
   TREASURE *fortune = NULL;
   if((fortune = malloc(sizeof(TREASURE))) == NULL)
     {
+      fclose(f);
+      closedir(folder);
       perror("Error creating a treasure: ");
       exit(-1);
     }
@@ -147,6 +148,59 @@ void list(char hunt[30])
     {
       print_treasure(fortune, index);
       index ++;
+    }
+  
+  fclose(f);
+  closedir(folder);
+}
+
+
+void view(char hunt[30], int treasure_ID)
+{
+  DIR *folder;
+
+  folder = opendir(hunt);
+  if(folder == NULL)
+   {
+     printf("Game doesn't exist.\n");
+     exit(-1);
+   }
+   
+  //open file
+  char filepath[50];
+  sprintf(filepath, "%s/Game.b", hunt);
+  FILE *f; //treasure file
+  if((f = fopen(filepath, "r")) == NULL)
+  {
+    perror("Error opening the treasure file: ");
+    exit(-1);
+  }
+  
+  printf("Hunt name: %s\n\n", hunt);
+
+  TREASURE *fortune = NULL;
+  if((fortune = malloc(sizeof(TREASURE))) == NULL)
+    {
+      perror("Error creating a treasure: "); 
+      fclose(f);
+      closedir(folder);
+      exit(-1);
+    }
+
+  int found = 0;
+  while(fread(fortune, sizeof(TREASURE), 1 , f))
+    {
+      if(fortune->ID == treasure_ID)
+	{
+	  print_treasure(fortune, 0);
+	  found = 1;
+	  break;
+	} 
+    }
+
+  if(found == 0)
+    {
+      printf("There aren't any treasures with the specified ID.\n");
     }
   
   fclose(f);

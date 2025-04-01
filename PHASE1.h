@@ -20,4 +20,6 @@ void add(char hunt[30]);
 
 void list(char hunt[30]);
 
+void view(char hunt[30], int treasure_ID);
+
 #endif

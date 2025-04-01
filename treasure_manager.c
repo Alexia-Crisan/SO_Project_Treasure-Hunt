@@ -32,6 +32,20 @@ void gameplay(int argc, char **argv)
 	  list(argv[2]);
 	}
     }
+
+  if(strcmp(argv[1], "--view") == 0)
+    {
+      if(argc != 4)
+	{
+	  printf("Unsuitable number of arguments for 'view' command.\n");
+	  exit(-1);
+	}
+      else
+	{
+	  int treasure_ID = strtol(argv[3], NULL, 10);
+	  view(argv[2], treasure_ID);
+	}
+    }
 }
 
 int main(int argc, char **argv)
