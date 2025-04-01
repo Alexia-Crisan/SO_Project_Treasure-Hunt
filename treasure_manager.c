@@ -19,6 +19,19 @@ void gameplay(int argc, char **argv)
 	  add(argv[2]);
 	}
     }
+
+  if(strcmp(argv[1], "--list") == 0)
+    {
+      if(argc != 3)
+	{
+	  printf("Unsuitable number of arguments for 'list' command.\n");
+	  exit(-1);
+	}
+      else
+	{
+	  list(argv[2]);
+	}
+    }
 }
 
 int main(int argc, char **argv)

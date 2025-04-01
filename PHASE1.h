@@ -18,4 +18,6 @@ typedef struct
 
 void add(char hunt[30]);
 
+void list(char hunt[30]);
+
 #endif
