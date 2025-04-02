@@ -4,6 +4,9 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <dirent.h>
 #include "PHASE1.h"
 
 TREASURE *create_treasure()
@@ -11,7 +14,7 @@ TREASURE *create_treasure()
   TREASURE *fortune = NULL;
   if((fortune = malloc(sizeof(TREASURE))) == NULL)
     {
-      perror("Error creating a treasure: ");
+      perror("Error creating a treasure");
       exit(-1);
     }
 
@@ -54,7 +57,7 @@ void add(char hunt[30])
      }
      else
      {
-       perror("Error creating the game directory: ");
+       perror("Error creating the game directory");
        exit(-1);
      }
    }
@@ -65,7 +68,7 @@ void add(char hunt[30])
   FILE *f; //treasure file
   if((f = fopen(filepath, "ab")) == NULL)
   {
-    perror("Error opening the treasure file: ");
+    perror("Error opening the treasure file");
     exit(-2);
   }
 
@@ -112,14 +115,14 @@ void list(char hunt[30])
   FILE *f; //treasure file
   if((f = fopen(filepath, "r")) == NULL)
   {
-    perror("Error opening the treasure file: ");
+    perror("Error opening the treasure file");
     exit(-1);
   }
 
   struct stat file_info;
   if (stat(filepath, &file_info) != 0)
     {
-        perror("Error getting file information: ");
+        perror("Error getting file information");
         fclose(f);
         closedir(folder);
         exit(-1);
@@ -172,7 +175,7 @@ void view(char hunt[30], int treasure_ID)
   FILE *f; //treasure file
   if((f = fopen(filepath, "r")) == NULL)
   {
-    perror("Error opening the treasure file: ");
+    perror("Error opening the treasure file");
     exit(-1);
   }
   
@@ -181,7 +184,7 @@ void view(char hunt[30], int treasure_ID)
   TREASURE *fortune = NULL;
   if((fortune = malloc(sizeof(TREASURE))) == NULL)
     {
-      perror("Error creating a treasure: "); 
+      perror("Error creating a treasure"); 
       fclose(f);
       closedir(folder);
       exit(-1);
@@ -205,4 +208,42 @@ void view(char hunt[30], int treasure_ID)
   
   fclose(f);
   closedir(folder);
+}
+
+void remove_hunt(char hunt[30])
+{
+  struct dirent *file;
+  DIR *folder;
+
+  folder = opendir(hunt);
+  if(folder == NULL)
+   {
+     printf("Game doesn't exist.\n");
+     exit(-1);
+   }
+
+  if((file = readdir(folder)) != NULL)
+    {
+      char filepath[50];
+      sprintf(filepath, "%s/Game.b", hunt);
+      
+      if (remove(filepath) == 0)
+	{
+	  printf("Deleted file: %s\n", filepath);
+	}
+      else
+	{
+	  perror("Failed to delete file");
+          closedir(folder);
+          exit(-1);
+        }
+    }
+  
+  closedir(folder);
+  
+  if(rmdir(hunt) != 0)
+    {
+      perror("Erro deleting the hunt");
+      exit(-1);
+    }
 }
