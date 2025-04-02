@@ -243,7 +243,97 @@ void remove_hunt(char hunt[30])
   
   if(rmdir(hunt) != 0)
     {
-      perror("Erro deleting the hunt");
+      perror("Error deleting the hunt");
       exit(-1);
     }
+}
+
+void remove_treasure(char hunt[30], int treasure_ID)
+{
+  DIR *folder;
+
+  folder = opendir(hunt);
+  if(folder == NULL)
+   {
+     printf("Game doesn't exist.\n");
+     exit(-1);
+   }
+   
+  //open file
+  char filepath[50];
+  sprintf(filepath, "%s/Game.b", hunt);
+  FILE *f; //treasure file
+  if((f = fopen(filepath, "r")) == NULL)
+  {
+    perror("Error opening the treasure file");
+    exit(-1);
+  }
+  
+  printf("Hunt name: %s\n\n", hunt);
+
+  TREASURE *fortune = NULL;
+  if((fortune = malloc(sizeof(TREASURE))) == NULL)
+    {
+      perror("Error creating a treasure"); 
+      fclose(f);
+      closedir(folder);
+      exit(-1);
+    }
+
+  int found = 0;
+  FILE *new = NULL;
+  char filepathnew[50];
+  sprintf(filepathnew, "%s/New.b", hunt);
+  
+  if((new = fopen(filepathnew, "ab")) == NULL)
+  {
+    perror("Error opening the new file");
+    exit(-1);
+  }
+
+  //iterare through all treasures, write all of them in the new file
+  while(fread(fortune, sizeof(TREASURE), 1 , f))
+    {
+      if(fortune->ID == treasure_ID)
+	{
+	  print_treasure(fortune, 0);
+	  found = 1;
+	}
+      else
+	{
+	  fwrite(fortune, sizeof(TREASURE), 1, new);
+	}
+    }
+
+   //delete old file
+   struct dirent *file;
+   
+   if((file = readdir(folder)) != NULL)
+    {
+      char filepath[50];
+      sprintf(filepath, "%s/Game.b", hunt);
+      
+      if (remove(filepath) == 0)
+	{
+	  printf("Deleted file: %s\n", filepath);
+	}
+      else
+	{
+	  perror("Failed to delete file");
+          closedir(folder);
+          exit(-1);
+        }
+    }
+
+   fclose(new);
+   //rename new file
+   rename(filepathnew, filepath);
+
+  if(found == 0)
+    {
+      printf("There aren't any treasures with the specified ID.\n");
+    }
+  
+  fclose(f);
+  closedir(folder);
 }

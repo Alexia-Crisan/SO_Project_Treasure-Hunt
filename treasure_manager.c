@@ -59,6 +59,20 @@ void gameplay(int argc, char **argv)
 	  remove_hunt(argv[2]);
 	}
     }
+
+  if(strcmp(argv[1], "--remove_treasure") == 0)
+    {
+      if(argc != 4)
+	{
+	  printf("Unsuitable number of arguments for 'remove_treasure' command.\n");
+	  exit(-1);
+	}
+      else
+	{
+	  int treasure_ID = strtol(argv[3], NULL, 10);
+	  remove_treasure(argv[2], treasure_ID);
+	}
+    }
 }
 
 int main(int argc, char **argv)

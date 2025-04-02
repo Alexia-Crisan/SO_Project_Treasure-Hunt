@@ -24,4 +24,6 @@ void view(char hunt[30], int treasure_ID);
 
 void remove_hunt(char hunt[30]);
 
+void remove_treasure(char hunt[30], int treasure_ID);
+
 #endif
