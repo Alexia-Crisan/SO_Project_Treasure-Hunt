@@ -6,7 +6,7 @@
 #include <time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <dirent.h>
+#include <fcntl.h>
 #include "PHASE1.h"
 
 TREASURE *create_treasure()
@@ -65,8 +65,8 @@ void add(char hunt[30])
   //open file
   char filepath[50];
   sprintf(filepath, "%s/Game.b", hunt);
-  FILE *f; //treasure file
-  if((f = fopen(filepath, "ab")) == NULL)
+  int f; //treasure file
+  if((f = open(filepath, O_WRONLY | O_APPEND | O_CREAT, 0777)) == 0)
   {
     perror("Error opening the treasure file");
     exit(-2);
@@ -75,10 +75,10 @@ void add(char hunt[30])
   TREASURE *fortune = create_treasure();
       
   //add  trasure
-  fwrite(fortune, sizeof(TREASURE), 1, f); 
+  write(f, fortune, sizeof(TREASURE)); 
 
   free(fortune);
-  fclose(f);
+  close(f);
   closedir(folder);
 }
 
@@ -112,8 +112,8 @@ void list(char hunt[30])
   //open file
   char filepath[50];
   sprintf(filepath, "%s/Game.b", hunt);
-  FILE *f; //treasure file
-  if((f = fopen(filepath, "r")) == NULL)
+  int f; //treasure file
+  if((f = open(filepath, O_RDONLY)) == -1)
   {
     perror("Error opening the treasure file");
     exit(-1);
@@ -123,7 +123,7 @@ void list(char hunt[30])
   if (stat(filepath, &file_info) != 0)
     {
         perror("Error getting file information");
-        fclose(f);
+        close(f);
         closedir(folder);
         exit(-1);
     }
@@ -140,20 +140,20 @@ void list(char hunt[30])
   TREASURE *fortune = NULL;
   if((fortune = malloc(sizeof(TREASURE))) == NULL)
     {
-      fclose(f);
+      close(f);
       closedir(folder);
       perror("Error creating a treasure: ");
       exit(-1);
     }
 
   int index = 1;
-  while(fread(fortune, sizeof(TREASURE), 1 , f))
+  while(read(f, fortune, sizeof(TREASURE)))
     {
       print_treasure(fortune, index);
       index ++;
     }
   
-  fclose(f);
+  close(f);
   closedir(folder);
 }
 
@@ -172,8 +172,8 @@ void view(char hunt[30], int treasure_ID)
   //open file
   char filepath[50];
   sprintf(filepath, "%s/Game.b", hunt);
-  FILE *f; //treasure file
-  if((f = fopen(filepath, "r")) == NULL)
+  int f; //treasure file
+  if((f = open(filepath, O_RDONLY)) == -1)
   {
     perror("Error opening the treasure file");
     exit(-1);
@@ -185,13 +185,13 @@ void view(char hunt[30], int treasure_ID)
   if((fortune = malloc(sizeof(TREASURE))) == NULL)
     {
       perror("Error creating a treasure"); 
-      fclose(f);
+      close(f);
       closedir(folder);
       exit(-1);
     }
 
   int found = 0;
-  while(fread(fortune, sizeof(TREASURE), 1 , f))
+  while(read(f, fortune, sizeof(TREASURE)))
     {
       if(fortune->ID == treasure_ID)
 	{
@@ -206,7 +206,7 @@ void view(char hunt[30], int treasure_ID)
       printf("There aren't any treasures with the specified ID.\n");
     }
   
-  fclose(f);
+  close(f);
   closedir(folder);
 }
 
@@ -262,8 +262,8 @@ void remove_treasure(char hunt[30], int treasure_ID)
   //open file
   char filepath[50];
   sprintf(filepath, "%s/Game.b", hunt);
-  FILE *f; //treasure file
-  if((f = fopen(filepath, "r")) == NULL)
+  int f; //treasure file
+  if((f = open(filepath, O_RDONLY)) == -1)
   {
     perror("Error opening the treasure file");
     exit(-1);
@@ -275,24 +275,24 @@ void remove_treasure(char hunt[30], int treasure_ID)
   if((fortune = malloc(sizeof(TREASURE))) == NULL)
     {
       perror("Error creating a treasure"); 
-      fclose(f);
+      close(f);
       closedir(folder);
       exit(-1);
     }
 
   int found = 0;
-  FILE *new = NULL;
+  int new;
   char filepathnew[50];
   sprintf(filepathnew, "%s/New.b", hunt);
   
-  if((new = fopen(filepathnew, "ab")) == NULL)
+  if((new = open(filepathnew, O_WRONLY | O_APPEND | O_CREAT, 0777)) == -1)
   {
     perror("Error opening the new file");
     exit(-1);
   }
 
   //iterare through all treasures, write all of them in the new file
-  while(fread(fortune, sizeof(TREASURE), 1 , f))
+  while(read(f, fortune, sizeof(TREASURE)))
     {
       if(fortune->ID == treasure_ID)
 	{
@@ -301,7 +301,7 @@ void remove_treasure(char hunt[30], int treasure_ID)
 	}
       else
 	{
-	  fwrite(fortune, sizeof(TREASURE), 1, new);
+	  write(new, fortune, sizeof(TREASURE));
 	}
     }
 
@@ -325,7 +325,7 @@ void remove_treasure(char hunt[30], int treasure_ID)
         }
     }
 
-   fclose(new);
+   close(new);
    //rename new file
    rename(filepathnew, filepath);
 
@@ -334,6 +334,6 @@ void remove_treasure(char hunt[30], int treasure_ID)
       printf("There aren't any treasures with the specified ID.\n");
     }
   
-  fclose(f);
+  close(f);
   closedir(folder);
 }
