@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "PHASE1.h"
 
 void gameplay(int argc, char **argv)
@@ -15,8 +16,14 @@ void gameplay(int argc, char **argv)
 	  exit(-1);
 	}
       else
-	{
+	{	  
 	  add(argv[2]);
+
+	  char filepath[50], name[50];
+	  sprintf(filepath, "./%s/Game.b", argv[2]);
+	  sprintf(name, "Game.b-<%s>", argv[2]);
+	  if(symlink(filepath, name) == -1)
+	    perror("Symbolic link creation failed");
 	}
     }
 
