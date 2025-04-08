@@ -8,7 +8,13 @@
 
 void gameplay(int argc, char **argv)
 {
-  if(strcmp(argv[1], "--add") == 0)
+  if(argc == 1)
+    {
+      printf("No arguments have been given!\n");
+      exit(-1);
+    }
+  
+  else if(strcmp(argv[1], "--add") == 0)
     {
       if(argc != 3)
 	{
@@ -18,16 +24,10 @@ void gameplay(int argc, char **argv)
       else
 	{	  
 	  add(argv[2]);
-
-	  char filepath[50], name[50];
-	  sprintf(filepath, "./%s/Game.b", argv[2]);
-	  sprintf(name, "Game.b-<%s>", argv[2]);
-	  if(symlink(filepath, name) == -1)
-	    perror("Symbolic link creation failed");
 	}
     }
 
-  if(strcmp(argv[1], "--list") == 0)
+  else if(strcmp(argv[1], "--list") == 0)
     {
       if(argc != 3)
 	{
@@ -40,7 +40,7 @@ void gameplay(int argc, char **argv)
 	}
     }
 
-  if(strcmp(argv[1], "--view") == 0)
+  else if(strcmp(argv[1], "--view") == 0)
     {
       if(argc != 4)
 	{
@@ -54,7 +54,7 @@ void gameplay(int argc, char **argv)
 	}
     }
 
-  if(strcmp(argv[1], "--remove_hunt") == 0)
+  else if(strcmp(argv[1], "--remove_hunt") == 0)
     {
       if(argc != 3)
 	{
@@ -67,7 +67,7 @@ void gameplay(int argc, char **argv)
 	}
     }
 
-  if(strcmp(argv[1], "--remove_treasure") == 0)
+  else if(strcmp(argv[1], "--remove_treasure") == 0)
     {
       if(argc != 4)
 	{
@@ -79,6 +79,11 @@ void gameplay(int argc, char **argv)
 	  int treasure_ID = strtol(argv[3], NULL, 10);
 	  remove_treasure(argv[2], treasure_ID);
 	}
+    }
+
+  else
+    {
+      printf("Command not found.\n");
     }
 }
 

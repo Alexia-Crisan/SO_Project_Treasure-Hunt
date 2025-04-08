@@ -9,6 +9,96 @@
 #include <fcntl.h>
 #include "PHASE1.h"
 
+void log_action(char action[], int treasure_ID, char hunt[30])
+{
+  //open directory
+  DIR *folder;
+
+  folder = opendir(hunt);
+  if(folder == NULL)
+    {
+      perror("Error opening the folder for log file");
+    }
+
+  //create log file
+  char filepath[50];
+  sprintf(filepath, "%s/logged_hunt", hunt);
+  
+  int l; //log file
+  if((l = open(filepath, O_WRONLY | O_APPEND | O_CREAT, 0777)) == -1)
+  {
+    perror("Error opening the log file");
+    exit(-1);
+  }
+
+  struct stat file_info;
+  if (stat(filepath, &file_info) != 0)
+    {
+        perror("Error getting file information");
+        close(l);
+        closedir(folder);
+        exit(-1);
+    }
+  
+  char str_log[100], str[30];
+  strftime(str, sizeof(str), "%c", localtime(&file_info.st_mtime));
+  sprintf(str_log, "Modification time: %s.\n", str);
+  write(l, str_log, strlen(str_log));
+   
+  
+  if(strcmp(action, "--add") == 0)
+    {
+      char str_action[40];
+      sprintf(str_action, "Performed action: --add.\n");
+      write(l, str_action, strlen(str_action));
+
+      char message[100];
+      sprintf(message, "Message: A treasure with the ID <%d> has been added to hunt <%s>.\n\n", treasure_ID, hunt);
+      write(l, message, strlen(message));
+    }
+
+   if(strcmp(action, "--list") == 0)
+    {
+      char str_action[40];
+      sprintf(str_action, "Performed action: --list.\n");
+      write(l, str_action, strlen(str_action));
+
+      char message[100];
+      sprintf(message, "Message: The treasures from the hunt <%s> have been listed.\n\n", hunt);
+      write(l, message, strlen(message));
+    }
+
+   if(strcmp(action, "--view") == 0)
+    {
+      char str_action[40];
+      sprintf(str_action, "Performed action: --view.\n");
+      write(l, str_action, strlen(str_action));
+
+      char message[100];
+      sprintf(message, "Message: A treasure with the ID <%d> from the hunt <%s> has been viewed.\n\n", treasure_ID, hunt);
+      write(l, message, strlen(message));
+    }
+
+   if(strcmp(action, "--remove_treasure") == 0)
+    {
+      char str_action[40];
+      sprintf(str_action, "Performed action: --remove_treasure.\n");
+      write(l, str_action, strlen(str_action));
+
+      char message[100];
+      sprintf(message, "Message: A treasure with the ID <%d> from the hunt <%s> has been removed.\n\n", treasure_ID, hunt);
+      write(l, message, strlen(message));
+    }
+
+   char filepath_symlink[50], name[50];
+   sprintf(filepath_symlink, "./%s/logged_hunt", hunt);
+   sprintf(name, "logged_hunt-<%s>", hunt);
+   symlink(filepath_symlink, name);
+
+   close(l);
+   closedir(folder);
+}
+
 TREASURE *create_treasure()
 {
   TREASURE *fortune = NULL;
@@ -76,10 +166,13 @@ void add(char hunt[30])
       
   //add  trasure
   write(f, fortune, sizeof(TREASURE)); 
-
-  free(fortune);
+  
   close(f);
   closedir(folder);
+
+  log_action("--add", fortune->ID, hunt);
+
+  free(fortune);
 }
 
 void print_treasure(TREASURE *fortune, int index)
@@ -112,6 +205,7 @@ void list(char hunt[30])
   //open file
   char filepath[50];
   sprintf(filepath, "%s/Game.b", hunt);
+  
   int f; //treasure file
   if((f = open(filepath, O_RDONLY)) == -1)
   {
@@ -155,6 +249,9 @@ void list(char hunt[30])
   
   close(f);
   closedir(folder);
+  free(fortune);
+
+  log_action("--list", 0, hunt);
 }
 
 
@@ -172,6 +269,7 @@ void view(char hunt[30], int treasure_ID)
   //open file
   char filepath[50];
   sprintf(filepath, "%s/Game.b", hunt);
+  
   int f; //treasure file
   if((f = open(filepath, O_RDONLY)) == -1)
   {
@@ -205,9 +303,14 @@ void view(char hunt[30], int treasure_ID)
     {
       printf("There aren't any treasures with the specified ID.\n");
     }
+  else
+    {
+      log_action("--view", fortune->ID, hunt);
+    }
   
   close(f);
   closedir(folder);
+  free(fortune);
 }
 
 void remove_hunt(char hunt[30])
@@ -222,10 +325,13 @@ void remove_hunt(char hunt[30])
      exit(-1);
    }
 
-  if((file = readdir(folder)) != NULL)
+  while((file = readdir(folder)) != NULL)
     {
-      char filepath[50];
-      sprintf(filepath, "%s/Game.b", hunt);
+      if (strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0)
+	continue;
+      
+      char filepath[512];
+      sprintf(filepath, "%s/%s", hunt, file->d_name);
       
       if (remove(filepath) == 0)
 	{
@@ -234,9 +340,19 @@ void remove_hunt(char hunt[30])
       else
 	{
 	  perror("Failed to delete file");
-          closedir(folder);
-          exit(-1);
         }
+    }
+
+  //remove symlink
+  char filepath[50];
+  sprintf(filepath, "./logged_hunt-<%s>", hunt);
+  if (remove(filepath) == 0)
+    {
+      printf("Deleted file: %s\n", filepath);
+    }
+  else
+    {
+      perror("Failed to delete file");
     }
   
   closedir(folder);
@@ -246,6 +362,8 @@ void remove_hunt(char hunt[30])
       perror("Error deleting the hunt");
       exit(-1);
     }
+
+  //log_action("--remove_hunt", hunt);
 }
 
 void remove_treasure(char hunt[30], int treasure_ID)
@@ -262,6 +380,7 @@ void remove_treasure(char hunt[30], int treasure_ID)
   //open file
   char filepath[50];
   sprintf(filepath, "%s/Game.b", hunt);
+  
   int f; //treasure file
   if((f = open(filepath, O_RDONLY)) == -1)
   {
@@ -333,7 +452,12 @@ void remove_treasure(char hunt[30], int treasure_ID)
     {
       printf("There aren't any treasures with the specified ID.\n");
     }
+  else
+    {
+      log_action("--remove_treasure", fortune->ID, hunt);
+    }
   
   close(f);
   closedir(folder);
+  free(fortune);
 }
