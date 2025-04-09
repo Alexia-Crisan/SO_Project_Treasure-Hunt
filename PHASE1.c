@@ -410,6 +410,8 @@ void remove_treasure(char hunt[30], int treasure_ID)
     exit(-1);
   }
 
+  int treasure_ID_log;
+
   //iterare through all treasures, write all of them in the new file
   while(read(f, fortune, sizeof(TREASURE)))
     {
@@ -417,6 +419,7 @@ void remove_treasure(char hunt[30], int treasure_ID)
 	{
 	  print_treasure(fortune, 0);
 	  found = 1;
+	  treasure_ID_log = fortune->ID;
 	}
       else
 	{
@@ -454,7 +457,7 @@ void remove_treasure(char hunt[30], int treasure_ID)
     }
   else
     {
-      log_action("--remove_treasure", fortune->ID, hunt);
+      log_action("--remove_treasure", treasure_ID_log, hunt);
     }
   
   close(f);
