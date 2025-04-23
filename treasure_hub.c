@@ -2,10 +2,49 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include "PHASE1.h"
 
+#define SIG_LIST_HUNTS     SIGUSR1
+#define SIG_LIST_TREASURES SIGUSR2
+#define SIG_VIEW_TREASURE  SIGUSR1
+#define SIG_STOP_MONITOR   SIGUSR1
 
 int monitor_running = 0;
 int monitor_pid;
+
+void print(int sig)
+{
+  printf("caca");
+  fflush(stdout);
+}
+
+void monitor()
+{
+  struct sigaction sa;
+  sa.sa_flags = 0;
+  sigemptyset(&sa.sa_mask);
+
+  sa.sa_handler = print;
+  sigaction(SIG_LIST_HUNTS, &sa, NULL);
+
+  sa.sa_handler = print;
+  sigaction(SIG_LIST_TREASURES, &sa, NULL);
+
+  sa.sa_handler = print;
+  sigaction(SIG_LIST_HUNTS, &sa, NULL);
+
+  sa.sa_handler = print;
+  sigaction(SIG_LIST_HUNTS, &sa, NULL);
+  
+  //wait for signal
+  while (1)
+    {
+      pause(); 
+    }
+}
 
 int main()
 {
@@ -27,7 +66,7 @@ int main()
 	      monitor_pid = fork();
 
 	      //Error fork
-	      if ((monitor_pid = fork()) < 0)
+	      if (monitor_pid < 0)
 		{
 		  perror("Unable to open process");
 		  exit(-1);
@@ -37,7 +76,9 @@ int main()
 	      if (monitor_pid == 0)
 		{
 		  //monitor_stuff
-		  printf("monitor\n");
+		  monitor_running = 1;
+		  //recieves_signals and do stuff
+		  monitor();
 		}
 	      else
 		{
@@ -56,6 +97,7 @@ int main()
 	      else
 		{
 		  //send signal stuff
+		  kill(monitor_pid, SIG_LIST_HUNTS);
 		}
 	    }
 
@@ -68,6 +110,7 @@ int main()
 	      else
 		{
 		  //send signal stuff
+		  kill(monitor_pid, SIG_LIST_TREASURES);
 		}
 	    }
 
@@ -80,6 +123,7 @@ int main()
 	      else
 		{
 		  //send signal stuff
+		  kill(monitor_pid, SIG_VIEW_TREASURE);
 		}
 	    }
 
@@ -92,6 +136,7 @@ int main()
 	      else
 		{
 		  //send signal stuff
+		  kill(monitor_pid, SIG_STOP_MONITOR);
 		}
 	    }
 
