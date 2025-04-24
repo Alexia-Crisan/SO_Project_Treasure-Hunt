@@ -5,10 +5,26 @@
 #include <string.h>
 #include <stdlib.h>
 
-void list_hunts();
+#define SIG_LIST_HUNTS     SIGUSR1
+#define SIG_LIST_TREASURES SIGUSR1
+#define SIG_VIEW_TREASURE  SIGUSR1
+#define SIG_STOP_MONITOR   SIGUSR1
 
-void list_treasures(char hunt[30]); //list from PHASE1
+extern int monitor_running;
+extern int monitor_pid;
 
-void view_treasure(char hunt[30], int treasure_ID); //view from PHASE1
+void monitor();
+
+void start_monitor();
+
+void list_hunts_wrapper();
+
+void list_treasures();
+
+void view_treasure();
+
+void stop_monitor();
+
+void exit();
 
 #endif

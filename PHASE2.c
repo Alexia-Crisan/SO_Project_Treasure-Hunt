@@ -9,56 +9,17 @@
 #include "PHASE1.h"
 #include "PHASE2.h"
 
-int get_number_of_treasures(char hunt[30])
-{
-  DIR *folder;
+#define COMMAND_SIZE 200 
 
-  folder = opendir(hunt);
-  if(folder == NULL)
-   {
-     printf("Game doesn't exist.\n");
-     exit(-1);
-   }
-   
-  //open file
-  char filepath[50];
-  sprintf(filepath, "%s/Game.b", hunt);
-  
-  int f; //treasure file
-  if((f = open(filepath, O_RDONLY)) == -1)
-  {
-    perror("Error opening the treasure file");
-    exit(-1);
-  }
-
-  TREASURE *fortune = NULL;
-  if((fortune = malloc(sizeof(TREASURE))) == NULL)
-    {
-      close(f);
-      closedir(folder);
-      perror("Error creating a treasure: ");
-      exit(-1);
-    }
-
-  //count treasures
-  int count = 0;
-  while(read(f, fortune, sizeof(TREASURE)))
-    {
-      count ++;
-    }
-  
-  close(f);
-  closedir(folder);
-  free(fortune);
-
-  return count;
-}
+int monitor_running = 0;
+int monitor_pid;
 
 void list_hunts()
 {
   struct dirent *file;
   const char *folder_path = "./"; //root game directory
   DIR *folder = opendir(folder_path);
+  printf("aciiiiiiiii");
 
   if(folder == NULL)
    {
@@ -70,24 +31,167 @@ void list_hunts()
     {
       if (strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0)
 	continue;
-      
       if (file->d_type == DT_DIR)
 	{
 	  char game_name[512];
 	  sprintf(game_name, "%s", file->d_name);
       
-	  printf("Game name: %s\n", game_name);
-	  printf("Number of treasure: %d\n\n", get_number_of_treasures(game_name));
+	  list(game_name);
 	}
     }
 }
 
-void list_treasures(char hunt[30])
+void handler(int sigtype)
 {
-  list(hunt);
+  char filepath[50];
+  strcpy(filepath, "command_file");
+  
+  int c; //command file
+  if((c = open(filepath, O_RDONLY)) == -1)
+  {
+    perror("Error opening the command file");
+    exit(-1);
+  }
+
+  char command[200] = {0};
+  read(c, command, COMMAND_SIZE);
+
+  command[strcspn(command, "\n")] = 0;
+
+  if (strstr(command, "--list_hunts") != 0)
+    {
+      list_hunts();
+    }
+  else if (strstr(command, "--list") != 0)
+    {
+      char hunt[30] = {0};
+      strncpy(hunt, command + 7, sizeof(hunt) - 1);
+      hunt[sizeof(hunt) - 1] = '\0';
+      
+      list(hunt);
+    }
+  else if (strstr(command, "--view") != 0)
+    {
+      char hunt[30] = {0};
+      char *com = strtok(command, " "); // "--view"
+      com = strtok(NULL, " ");          
+      strcpy(hunt, com);
+      com = strtok(NULL, " ");          
+      int ID = strtol(com, NULL, 10);
+
+      view(hunt, ID);
+    }
+
+  close(c);
 }
 
-void view_treasure(char hunt[30], int treasure_ID)
+void monitor()
 {
-  view(hunt, treasure_ID);
+  struct sigaction sa;
+  sa.sa_flags = 0;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_handler = handler;
+        
+  if (sigaction(SIGUSR1, &sa, NULL) == -1)
+    {
+      perror("Sigaction error");
+      exit(-1);
+    }
+  
+  //wait for signal
+  while (1)
+    {
+      pause(); 
+    }
+
+  exit(0);
 }
+
+void start_monitor()
+{
+  if(monitor_running)
+    {
+      printf("Monitor already running.\n");
+    }
+  else
+    {
+      monitor_pid = fork();
+
+      //Error fork
+      if (monitor_pid < 0)
+	{
+	  perror("Unable to open process");
+	  exit(-1);
+	}
+
+      //in monitor
+      if (monitor_pid == 0)
+	{
+	  //monitor_stuff
+	  monitor_running = 1;
+	  //recieves_signals and do stuff
+	  monitor();
+	}
+      else
+	{ 
+	  monitor_running = 1;
+	  printf("[Hub] Monitor started with PID %d\n", monitor_pid);
+	}     
+    }
+}
+
+void add_command_to_file(char message[200])
+{
+  //create command file
+  char filepath[50];
+  strcpy(filepath, "command_file");
+  
+  int c; //command file
+  if((c = open(filepath, O_WRONLY | O_CREAT, 0777)) == -1)
+  {
+    perror("Error opening the command file");
+    exit(-1);
+  }
+
+  write(c, message, strlen(message));
+
+  close(c);
+}
+
+void list_treasures()
+{
+  char hunt[30] = {0};
+  printf("Enter hunt: ");
+  scanf("%s",hunt);
+  hunt[strcspn(hunt, "\n")] = 0;
+  
+  char full_message[200] = {0};
+  sprintf(full_message,"%s %s", "--list", hunt);
+  add_command_to_file(full_message);
+  kill(monitor_pid, SIG_LIST_TREASURES);
+}
+
+void view_treasure()
+{
+  char hunt[30] = {0};
+  int ID;
+  printf("Enter hunt: ");
+  scanf("%s",hunt);
+  hunt[strcspn(hunt, "\n")] = 0;
+  printf("Enter treasure ID: ");
+  scanf("%d", &ID);
+  
+  char full_message[200] = {0};
+  sprintf(full_message, "%s %s %d", "--view", hunt, ID);
+  add_command_to_file(full_message);
+  kill(monitor_pid, SIG_VIEW_TREASURE);
+}
+
+void list_hunts_wrapper()
+{
+  char full_message[200] = {0};
+  sprintf(full_message,"%s", "--list_hunts");
+  add_command_to_file(full_message);
+  kill(monitor_pid, SIG_LIST_HUNTS);
+}
+
