@@ -241,11 +241,16 @@ void list(char hunt[30])
     }
 
   int index = 1;
+  int count = 0;
   while(read(f, fortune, sizeof(TREASURE)))
     {
       print_treasure(fortune, index);
       index ++;
+      count ++;
     }
+
+  printf("Total number of treasures: %d\n\n", count);
+  printf("===============================================\n\n");
   
   close(f);
   closedir(folder);
