@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/wait.h>
 #include "PHASE1.h"
 #include "PHASE2.h"
 
@@ -91,7 +92,7 @@ void handler(int sigtype)
   else if (strstr(command, "--view") != 0)
     {
       char hunt[30] = {0};
-      char *com = strtok(command, " "); // "--view"
+      char *com = strtok(command, " ");
       com = strtok(NULL, " ");          
       strcpy(hunt, com);
       com = strtok(NULL, " ");          
@@ -102,6 +103,13 @@ void handler(int sigtype)
     }
 
   close(c);
+}
+
+void handler_stop(int sigtype)
+{
+  printf("Monitor received stop signal. Delaying exit...\n");
+  usleep(3000000); // 3 sec delay
+  printf("Monitor stoppping now.\n");
 }
 
 void monitor()
@@ -116,6 +124,19 @@ void monitor()
       perror("Sigaction error");
       exit(-1);
     }
+
+  /*
+  struct sigaction sa_stop;
+  sa_stop.sa_flags = 0;
+  sigemptyset(&sa_stop.sa_mask);
+  sa_stop.sa_handler = handler_stop;
+        
+  if (sigaction(SIGTERM, &sa_stop, NULL) == -1)
+    {
+      perror("Sigaction error");
+      exit(-1);
+      }*/
+
   
   //wait for signal
   while (1)
@@ -148,6 +169,7 @@ void start_monitor()
 	{
 	  //monitor_stuff
 	  monitor_running = 1;
+	  
 	  //recieves_signals and do stuff
 	  monitor();
 	}
@@ -212,5 +234,40 @@ void list_hunts_wrapper()
   sprintf(full_message,"%s", "--list_hunts");
   add_command_to_file(full_message);
   kill(monitor_pid, SIG_LIST_HUNTS);
+}
+
+void stop_monitor()
+{
+  printf("Monitor is stopping; stop sending commands!\n");
+  usleep(3000000);
+
+  // send SIGTERM signal
+  kill(monitor_pid, SIG_STOP_MONITOR); 
+
+  int status;
+  int return_waitpid = waitpid(monitor_pid, &status, 0);
+  if (return_waitpid == -1)
+    {
+      perror("Waitpid error");
+      exit(-1);
+    }
+  
+  // WIF = Wait IF
+  if (WIFEXITED(status))
+    {
+      // Checks if the child process terminated via exit() or return
+      printf("Monitor terminated with status %d\n", WEXITSTATUS(status));
+      // WEXITSTATUS(status) extracts the exit code
+    }
+  else if (WIFSIGNALED(status))
+    {
+      // Checks if the child process terminated via by a signal
+      printf("Monitor killed by signal %d\n", WTERMSIG(status));
+      // WTERMSIG(status) gives the signal number that caused the process to terminate.
+    }
+  else
+    {
+      printf("Monitor terminated abnormally.\n");
+    }
 }
 

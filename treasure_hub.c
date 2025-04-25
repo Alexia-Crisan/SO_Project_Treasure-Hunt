@@ -52,7 +52,7 @@ int main()
 	  if(!monitor_running)
 	    {
 	      printf("Error: Monitor not running.\n");
-		}
+	    }
 	  else
 	    {
 	      //send signal stuff
@@ -69,25 +69,27 @@ int main()
 	  else
 	    {
 	      //send signal stuff
-	      kill(monitor_pid, SIG_STOP_MONITOR);
+	      stop_monitor();
+	      monitor_running = 0;
 	    }
 	}
       
       else if(strcmp(command, "exit") == 0)
 	{
-	  if(!monitor_running)
+	  if(monitor_running)
 	    {
-	      printf("Error: Monitor not running.\n");
+	      printf("Error: Monitor still running.\n");
+	      printf("Use stop_monitor command first.\n");
 	    }
 	  else
 	    {
-	      //send signal stuff
-	    }
+	      exit(0);
+	    }  
 	}
       
       else
 	{
-	  printf("Unknown command: %s\n", command);
+	    printf("Unknown command: %s\n", command);
 	}
     } 
    
