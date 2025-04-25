@@ -19,11 +19,10 @@ void list_hunts()
   struct dirent *file;
   const char *folder_path = "./"; //root game directory
   DIR *folder = opendir(folder_path);
-  printf("aciiiiiiiii");
 
   if(folder == NULL)
    {
-     perror("Error at opening root game directory");
+     perror("Error opening root game directory");
      exit(-1);
    }
 
@@ -31,7 +30,8 @@ void list_hunts()
     {
       if (strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0)
 	continue;
-      if (file->d_type == DT_DIR)
+      
+      if (file->d_type == DT_DIR && strcmp(file->d_name, ".git") != 0)
 	{
 	  char game_name[512];
 	  sprintf(game_name, "%s", file->d_name);
@@ -39,6 +39,21 @@ void list_hunts()
 	  list(game_name);
 	}
     }
+}
+
+void delete_command()
+{
+  char filepath[50];
+  strcpy(filepath, "command_file");
+  
+  int c; //command file
+  if((c = open(filepath, O_WRONLY | O_TRUNC)) == -1)
+  {
+    perror("Error opening the command file");
+    exit(-1);
+  }
+
+  close(c);
 }
 
 void handler(int sigtype)
@@ -61,14 +76,17 @@ void handler(int sigtype)
   if (strstr(command, "--list_hunts") != 0)
     {
       list_hunts();
+      delete_command();
     }
   else if (strstr(command, "--list") != 0)
     {
       char hunt[30] = {0};
       strncpy(hunt, command + 7, sizeof(hunt) - 1);
       hunt[sizeof(hunt) - 1] = '\0';
+      printf("\n%s\n", hunt);
       
       list(hunt);
+      delete_command();
     }
   else if (strstr(command, "--view") != 0)
     {
@@ -80,6 +98,7 @@ void handler(int sigtype)
       int ID = strtol(com, NULL, 10);
 
       view(hunt, ID);
+      delete_command();
     }
 
   close(c);
