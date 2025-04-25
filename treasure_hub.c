@@ -7,8 +7,24 @@
 #include <unistd.h>
 #include "PHASE2.h"
 
+void handler_sigchld(int sig)
+{
+  printf("[Hub] Monitor is  done\n");
+}
+
 int main()
 {
+  struct sigaction sa_sigchld;
+  sa_sigchld.sa_flags = 0;
+  sigemptyset(&sa_sigchld.sa_mask);
+  sa_sigchld.sa_handler = handler_sigchld;
+        
+  if (sigaction(SIGCHLD, &sa_sigchld, NULL) == -1)
+    {
+      perror("Sigaction error");
+      exit(-1);
+    }
+
   while(1)
     {
       char command[30];
@@ -89,7 +105,7 @@ int main()
       
       else
 	{
-	    printf("Unknown command: %s\n", command);
+	  printf("Unknown command: %s\n", command);
 	}
     } 
    

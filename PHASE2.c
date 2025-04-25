@@ -105,13 +105,6 @@ void handler(int sigtype)
   close(c);
 }
 
-void handler_stop(int sigtype)
-{
-  printf("Monitor received stop signal. Delaying exit...\n");
-  usleep(3000000); // 3 sec delay
-  printf("Monitor stoppping now.\n");
-}
-
 void monitor()
 {
   struct sigaction sa;
@@ -124,19 +117,6 @@ void monitor()
       perror("Sigaction error");
       exit(-1);
     }
-
-  /*
-  struct sigaction sa_stop;
-  sa_stop.sa_flags = 0;
-  sigemptyset(&sa_stop.sa_mask);
-  sa_stop.sa_handler = handler_stop;
-        
-  if (sigaction(SIGTERM, &sa_stop, NULL) == -1)
-    {
-      perror("Sigaction error");
-      exit(-1);
-      }*/
-
   
   //wait for signal
   while (1)
@@ -270,4 +250,5 @@ void stop_monitor()
       printf("Monitor terminated abnormally.\n");
     }
 }
+
 
