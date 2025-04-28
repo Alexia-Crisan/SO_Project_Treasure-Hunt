@@ -81,13 +81,22 @@ void handler(int sigtype)
     }
   else if (strstr(command, "--list") != 0)
     {
-      char hunt[30] = {0};
-      strncpy(hunt, command + 7, sizeof(hunt) - 1);
-      hunt[sizeof(hunt) - 1] = '\0';
-      printf("\n%s\n", hunt);
-      
-      list(hunt);
-      delete_command();
+      char hunt[30] = {0}, exec[30] = {0}, action[30] = {0};
+      char *com = strtok(command, " ");
+      strcpy(exec, com);
+      com = strtok(NULL, " ");          
+      strcpy(action, com);
+      com = strtok(NULL, " ");          
+      strcpy(hunt, com);
+
+      char *arg = malloc(sizeof(hunt) + sizeof(action));
+      strcpy(arg[0], action);
+      strcpy(arg[1], hunt);
+      printf("%s", arg);
+
+      execv(exec, arg);
+      //list(hunt);
+      //delete_command();
     }
   else if (strstr(command, "--view") != 0)
     {
@@ -187,7 +196,7 @@ void list_treasures()
   hunt[strcspn(hunt, "\n")] = 0;
   
   char full_message[200] = {0};
-  sprintf(full_message,"%s %s", "--list", hunt);
+  sprintf(full_message,"%s %s %s", "./exec1","--list", hunt);
   add_command_to_file(full_message);
   kill(monitor_pid, SIG_LIST_TREASURES);
 }
@@ -222,7 +231,16 @@ void stop_monitor()
   usleep(3000000);
 
   // send SIGTERM signal
-  kill(monitor_pid, SIG_STOP_MONITOR); 
+  kill(monitor_pid, SIG_STOP_MONITOR);
+  
+  while(monitor_pid != -1)
+    {
+      char command[30];
+      if(scanf("%s", command) == 1)
+	{
+	  printf("Illegal action <%s> while monitor is stoppping!\n", command);
+	}      
+    }
 
   int status;
   int return_waitpid = waitpid(monitor_pid, &status, 0);

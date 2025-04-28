@@ -9,6 +9,7 @@
 
 void handler_sigchld(int sig)
 {
+  monitor_pid = -1;
   printf("[Hub] Monitor is  done\n");
 }
 
