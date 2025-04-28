@@ -11,6 +11,7 @@
 #define SIG_STOP_MONITOR   SIGTERM 
 
 extern int monitor_running;
+extern int monitor_killed;
 extern int monitor_pid;
 
 void monitor();

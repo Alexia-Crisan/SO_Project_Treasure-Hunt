@@ -4,14 +4,21 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include "PHASE2.h"
 
 void handler_sigchld(int sig)
 {
-  monitor_pid = -1;
-  printf("[Hub] Monitor is  done\n");
-}
+  if (monitor_killed)
+    {
+      monitor_pid = -1;
+      printf("[Hub] Monitor is  done.\n");
+      
+      monitor_killed = 0; 
+    }
+ }
+ 
 
 int main()
 {

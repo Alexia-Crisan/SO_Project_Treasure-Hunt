@@ -13,6 +13,7 @@
 #define COMMAND_SIZE 200 
 
 int monitor_running = 0;
+int  monitor_killed;
 int monitor_pid;
 
 void list_hunts()
@@ -84,19 +85,36 @@ void handler(int sigtype)
       char hunt[30] = {0}, exec[30] = {0}, action[30] = {0};
       char *com = strtok(command, " ");
       strcpy(exec, com);
-      com = strtok(NULL, " ");          
+      com = strtok(NULL, " ");
       strcpy(action, com);
-      com = strtok(NULL, " ");          
+      com = strtok(NULL, " ");
       strcpy(hunt, com);
 
-      char *arg = malloc(sizeof(hunt) + sizeof(action));
-      strcpy(arg[0], action);
-      strcpy(arg[1], hunt);
-      printf("%s", arg);
+      char *arg[4];
+      arg[0] = exec;   
+      arg[1] = action;  
+      arg[2] = hunt;   
+      arg[3] = NULL; //mandatory
 
-      execv(exec, arg);
+      int pid = fork();
+
+      //Error fork
+      if (pid < 0)
+	{
+	  perror("Unable to open process");
+	  exit(-1);
+	}
+      if (pid == 0)
+	{
+	  if(execv(exec, arg) == -1)
+	    {
+	      perror("execv failed");
+	      exit(1);
+	    }	  
+	}
+      
       //list(hunt);
-      //delete_command();
+      delete_command();
     }
   else if (strstr(command, "--view") != 0)
     {
@@ -232,6 +250,7 @@ void stop_monitor()
 
   // send SIGTERM signal
   kill(monitor_pid, SIG_STOP_MONITOR);
+  monitor_killed = 1;
   
   while(monitor_pid != -1)
     {
@@ -250,18 +269,18 @@ void stop_monitor()
       exit(-1);
     }
   
-  // WIF = Wait IF
+  //WIF = Wait IF
   if (WIFEXITED(status))
     {
-      // Checks if the child process terminated via exit() or return
+      //Checks if the child process terminated via exit() or return
       printf("Monitor terminated with status %d\n", WEXITSTATUS(status));
-      // WEXITSTATUS(status) extracts the exit code
+      //WEXITSTATUS(status) extracts the exit code
     }
   else if (WIFSIGNALED(status))
     {
-      // Checks if the child process terminated via by a signal
+      //Checks if the child process terminated via by a signal
       printf("Monitor killed by signal %d\n", WTERMSIG(status));
-      // WTERMSIG(status) gives the signal number that caused the process to terminate.
+      //WTERMSIG(status) gives the signal number that caused the process to terminate.
     }
   else
     {
