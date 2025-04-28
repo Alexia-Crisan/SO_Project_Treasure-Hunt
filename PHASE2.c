@@ -214,7 +214,7 @@ void list_treasures()
   hunt[strcspn(hunt, "\n")] = 0;
   
   char full_message[200] = {0};
-  sprintf(full_message,"%s %s %s", "./exec1","--list", hunt);
+  sprintf(full_message,"%s %s %s", "./exec_PHASE1","--list", hunt);
   add_command_to_file(full_message);
   kill(monitor_pid, SIG_LIST_TREASURES);
 }
