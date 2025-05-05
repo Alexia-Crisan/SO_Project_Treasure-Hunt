@@ -18,7 +18,89 @@ void handler_sigchld(int sig)
       monitor_killed = 0; 
     }
  }
- 
+
+void print_from_pipe()
+{
+}
+
+void do_action(char command[30])
+{
+  if(strcmp(command, "start_monitor") == 0)
+    {
+      start_monitor();
+    }
+  
+  else if(strcmp(command, "list_hunts") == 0)
+    {
+      if(!monitor_running)
+	{
+	  printf("Error: Monitor not running.\n");
+	}
+      else
+	{
+	  //send signal stuff
+	  list_hunts_wrapper();
+	} 
+    }
+      
+  else if(strcmp(command, "list_treasures") == 0)
+    {
+      if(!monitor_running)
+	{
+	  printf("Error: Monitor not running.\n");
+	}
+      else
+	{
+	  //send signal stuff
+	  list_treasures();
+	}
+    }
+  
+  else if(strcmp(command, "view_treasure") == 0)
+    {
+      if(!monitor_running)
+	{
+	  printf("Error: Monitor not running.\n");
+	}
+      else
+	{
+	  //send signal stuff
+	  view_treasure();
+	}
+    }
+
+  else if(strcmp(command, "stop_monitor") == 0)
+    {
+      if(!monitor_running)
+	{
+	  printf("Error: Monitor not running.\n");
+	}
+      else
+	{
+	  //send signal stuff
+	  stop_monitor();
+	  monitor_running = 0;
+	}
+    }
+      
+  else if(strcmp(command, "exit") == 0)
+    {
+      if(monitor_running)
+	{
+	  printf("Error: Monitor still running.\n");
+	  printf("Use stop_monitor command first.\n");
+	}
+      else
+	{
+	  exit(0);
+	}  
+    }
+  
+  else
+    {
+      printf("Unknown command: %s\n", command);
+    }
+}
 
 int main()
 {
@@ -40,83 +122,8 @@ int main()
       scanf("%s", command);
       command[strcspn(command, "\n")] = 0;
       
-      if(strcmp(command, "start_monitor") == 0)
-	{
-	  start_monitor();
-	}
-
-      else if(strcmp(command, "list_hunts") == 0)
-	{
-	  if(!monitor_running)
-	    {
-	      printf("Error: Monitor not running.\n");
-	    }
-	  else
-	    {
-	      //send signal stuff
-	      list_hunts_wrapper();
-	    } 
-	}
-      
-      else if(strcmp(command, "list_treasures") == 0)
-	{
-	  if(!monitor_running)
-	    {
-	      printf("Error: Monitor not running.\n");
-	    }
-	  else
-	    {
-	      //send signal stuff
-	      list_treasures();
-	    }
-	}
-      
-      else if(strcmp(command, "view_treasure") == 0)
-	{
-	  if(!monitor_running)
-	    {
-	      printf("Error: Monitor not running.\n");
-	    }
-	  else
-	    {
-	      //send signal stuff
-	      view_treasure();
-	    }
-	}
-
-      else if(strcmp(command, "stop_monitor") == 0)
-	{
-	  if(!monitor_running)
-	    {
-	      printf("Error: Monitor not running.\n");
-	    }
-	  else
-	    {
-	      //send signal stuff
-	      stop_monitor();
-	      monitor_running = 0;
-	    }
-	}
-      
-      else if(strcmp(command, "exit") == 0)
-	{
-	  if(monitor_running)
-	    {
-	      printf("Error: Monitor still running.\n");
-	      printf("Use stop_monitor command first.\n");
-	    }
-	  else
-	    {
-	      exit(0);
-	    }  
-	}
-      
-      else
-	{
-	  printf("Unknown command: %s\n", command);
-	}
-    } 
-   
+      do_action(command);
+    }
   return 0;
 }
 

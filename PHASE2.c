@@ -13,7 +13,7 @@
 #define COMMAND_SIZE 200 
 
 int monitor_running = 0;
-int  monitor_killed;
+int monitor_killed;
 int monitor_pid;
 
 void list_hunts()
@@ -132,6 +132,12 @@ void handler(int sigtype)
   close(c);
 }
 
+void handler_stop_monitor(int sigtype)
+{
+  usleep(3000000);
+  exit(0);
+}
+
 void monitor()
 {
   struct sigaction sa;
@@ -140,6 +146,17 @@ void monitor()
   sa.sa_handler = handler;
         
   if (sigaction(SIGUSR1, &sa, NULL) == -1)
+    {
+      perror("Sigaction error");
+      exit(-1);
+    }
+  
+  struct sigaction sa_stop_monitor;
+  sa_stop_monitor.sa_flags = 0;
+  sigemptyset(&sa_stop_monitor.sa_mask);
+  sa_stop_monitor.sa_handler = handler_stop_monitor;
+        
+  if (sigaction(SIGTERM, &sa_stop_monitor, NULL) == -1)
     {
       perror("Sigaction error");
       exit(-1);
@@ -243,24 +260,23 @@ void list_hunts_wrapper()
   kill(monitor_pid, SIG_LIST_HUNTS);
 }
 
+
 void stop_monitor()
 {
   printf("Monitor is stopping; stop sending commands!\n");
-  usleep(3000000);
-
+  
   // send SIGTERM signal
   kill(monitor_pid, SIG_STOP_MONITOR);
   monitor_killed = 1;
   
   while(monitor_pid != -1)
     {
-      char command[30];
-      if(scanf("%s", command) == 1)
+      if(fgetc(stdin) == '\n')
 	{
-	  printf("Illegal action <%s> while monitor is stoppping!\n", command);
+	  printf("Illegal action while monitor is stoppping!\n");
 	}      
     }
-
+ 
   int status;
   int return_waitpid = waitpid(monitor_pid, &status, 0);
   if (return_waitpid == -1)
