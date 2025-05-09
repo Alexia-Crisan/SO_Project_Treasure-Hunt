@@ -7,7 +7,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include "PHASE2.h"
-#include "PHASE3.h"
 
 void handler_sigchld(int sig)
 {
@@ -37,10 +36,6 @@ void do_action(char command[30])
 	{
 	  //send signal stuff
 	  list_hunts_wrapper();
-	  
-	  //printf from pipe
-	  usleep(100000);
-	  print_from_pipe(pfd);
 	} 
     }
       
@@ -54,10 +49,6 @@ void do_action(char command[30])
 	{
 	  //send signal stuff
 	  list_treasures();
-
-	  //printf from pipe
-	  usleep(100000);
-	  print_from_pipe(pfd);
 	}
     }
   
@@ -71,10 +62,6 @@ void do_action(char command[30])
 	{
 	  //send signal stuff
 	  view_treasure();
-
-	  //printf from pipe
-	  usleep(100000);
-	  print_from_pipe(pfd);
 	}
     }
 

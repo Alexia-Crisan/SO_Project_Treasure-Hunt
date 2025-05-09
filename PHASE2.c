@@ -9,12 +9,14 @@
 #include <sys/wait.h>
 #include "PHASE1.h"
 #include "PHASE2.h"
+#include "PHASE3.h"
 
 #define COMMAND_SIZE 200 
 
 int monitor_running = 0;
 int monitor_killed;
 int monitor_pid;
+int pfd[2];
 
 void list_hunts()
 {
@@ -37,7 +39,7 @@ void list_hunts()
 	{
 	  char game_name[512];
 	  sprintf(game_name, "%s", file->d_name);
-      
+
 	  list(game_name);
 	}
     }
@@ -77,6 +79,7 @@ void handler(int sigtype)
 
   if (strstr(command, "--list_hunts") != 0)
     {
+      write_in_pipe(pfd);
       list_hunts();
       delete_command();
     }
@@ -98,6 +101,7 @@ void handler(int sigtype)
 
       int pid = fork();
 
+      write_in_pipe(pfd);
       //Error fork
       if (pid < 0)
 	{
@@ -125,6 +129,7 @@ void handler(int sigtype)
       com = strtok(NULL, " ");          
       int ID = strtol(com, NULL, 10);
 
+      write_in_pipe(pfd);
       view(hunt, ID);
       delete_command();
     }
@@ -179,6 +184,13 @@ void start_monitor()
     }
   else
     {
+      //create pipe
+      if(pipe(pfd) < 0)
+	{
+	  perror("Pipe error");
+	  exit(-1);
+	}
+      
       monitor_pid = fork();
 
       //Error fork
