@@ -40,7 +40,7 @@ void do_action(char command[30])
 	  
 	  //printf from pipe
 	  usleep(100000);
-	  print_from_pipe(pfd);
+	  print_from_pipe(pfd1);
 	} 
     }
       
@@ -57,7 +57,7 @@ void do_action(char command[30])
 
 	  //printf from pipe
 	  usleep(100000);
-	  print_from_pipe(pfd);
+	  print_from_pipe(pfd2);
 	}
     }
   
@@ -74,7 +74,7 @@ void do_action(char command[30])
 
 	  //printf from pipe
 	  usleep(100000);
-	  print_from_pipe(pfd);
+	  print_from_pipe(pfd3);
 	}
     }
 

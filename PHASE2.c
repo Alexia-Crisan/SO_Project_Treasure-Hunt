@@ -16,7 +16,9 @@
 int monitor_running = 0;
 int monitor_killed;
 int monitor_pid;
-int pfd[2];
+int pfd1[2];
+int pfd2[2];
+int pfd3[2];
 
 void list_hunts()
 {
@@ -79,9 +81,10 @@ void handler(int sigtype)
 
   if (strstr(command, "--list_hunts") != 0)
     {
-      write_in_pipe(pfd);
+      write_in_pipe(pfd1);
       list_hunts();
       delete_command();
+      close(STDOUT_FILENO);
     }
   else if (strstr(command, "--list") != 0)
     {
@@ -101,7 +104,7 @@ void handler(int sigtype)
 
       int pid = fork();
 
-      write_in_pipe(pfd);
+      write_in_pipe(pfd2);
       //Error fork
       if (pid < 0)
 	{
@@ -119,6 +122,7 @@ void handler(int sigtype)
       
       //list(hunt);
       delete_command();
+      close(STDOUT_FILENO);
     }
   else if (strstr(command, "--view") != 0)
     {
@@ -129,9 +133,10 @@ void handler(int sigtype)
       com = strtok(NULL, " ");          
       int ID = strtol(com, NULL, 10);
 
-      write_in_pipe(pfd);
+      write_in_pipe(pfd3);
       view(hunt, ID);
       delete_command();
+      close(STDOUT_FILENO);
     }
 
   close(c);
@@ -184,8 +189,20 @@ void start_monitor()
     }
   else
     {
-      //create pipe
-      if(pipe(pfd) < 0)
+      //create pipes
+      if(pipe(pfd1) < 0)
+	{
+	  perror("Pipe error");
+	  exit(-1);
+	}
+
+      if(pipe(pfd2) < 0)
+	{
+	  perror("Pipe error");
+	  exit(-1);
+	}
+
+      if(pipe(pfd3) < 0)
 	{
 	  perror("Pipe error");
 	  exit(-1);
@@ -202,11 +219,8 @@ void start_monitor()
 
       //in monitor
       if (monitor_pid == 0)
-	{
-	  //monitor_stuff
-	  monitor_running = 1;
-	  
-	  //recieves_signals and do stuff
+	{ 
+	  //monitor stuff
 	  monitor();
 	}
       else

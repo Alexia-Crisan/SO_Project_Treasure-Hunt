@@ -13,6 +13,7 @@ void write_in_pipe(int pfd[2])
 {
   close(pfd[0]); //close reading end			 
   dup2(pfd[1], STDOUT_FILENO);
+  close(pfd[1]); // close writing end
 }
 
 void print_from_pipe(int pfd[2])
@@ -33,6 +34,7 @@ void print_from_pipe(int pfd[2])
       printf("%s", buffer);
     }
 
-  close(pfd[0]); //close used end
   fclose(stream);
+  //close(pfd[0]); //close used end //implicit with fclose
+  
 }
