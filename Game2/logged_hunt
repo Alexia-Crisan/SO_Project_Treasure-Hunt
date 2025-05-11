@@ -74,3 +74,11 @@ Modification time: Sun May 11 10:49:27 2025.
 Performed action: --list.
 Message: The treasures from the hunt <Game2> have been listed.
 
+Modification time: Sun May 11 10:57:52 2025.
+Performed action: --add.
+Message: A treasure with the ID <345> has been added to hunt <Game2>.
+
+Modification time: Sun May 11 11:05:36 2025.
+Performed action: --add.
+Message: A treasure with the ID <234> has been added to hunt <Game2>.
+

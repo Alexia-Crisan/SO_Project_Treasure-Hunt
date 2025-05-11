@@ -104,6 +104,19 @@ void do_action(char command[30])
 	  exit(0);
 	}  
     }
+
+  else if (strcmp(command, "calculate_score") == 0)
+    {
+      char Username[30];
+      int score;
+      printf("Username: ");
+      scanf("%s", Username);
+      Username[strcspn(Username, "\n")] = 0;
+      
+      score = calculate_score(Username);
+
+      printf("The user <%s> has a score of <%d> points.\n", Username, score);
+    }
   
   else
     {
